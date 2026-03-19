@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific
+data/
+experiments/
+models/
+*.npy
+*.npz
+wandb/
+
+# Checkpoints & model weights
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+checkpoints/
+
+# Type checking cache
+.mypy_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Secrets
+.env
+*.key
+
+# uv
+uv.lock
