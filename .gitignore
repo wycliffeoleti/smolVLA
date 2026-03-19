@@ -50,3 +50,6 @@ checkpoints/
 
 # uv
 uv.lock
+
+# Local build tools
+.local/

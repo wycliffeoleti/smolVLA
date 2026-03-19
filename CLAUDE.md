@@ -14,10 +14,13 @@
 
 ## Critical Gotchas
 1. ffmpeg 7.x with libsvtav1 required — installed via conda at `~/miniforge3/bin/ffmpeg`
-2. `source .env` before any lerobot CLI commands (sets HF_HOME, MUJOCO_GL, PATH)
-3. 50+ episodes minimum for SmolVLA — 25 episodes explicitly fails
-4. Obs keys: `observation.state` (8-dim), `observation.images.image`, `observation.images.image2`, `action` (7-dim)
-5. LIBERO training uses `--policy.load_vlm_weights=true` and `--batch_size=4`
+2. `source .env` before any lerobot CLI commands (sets HF_HOME, MUJOCO_GL, PATH to conda bins)
+3. cmake wrapper at `.local/bin/cmake` injects `-DCMAKE_POLICY_VERSION_MINIMUM=3.5` (needed for egl-probe build with cmake 4.x)
+4. EGL dev headers installed via conda (`libegl-devel`) at `~/miniforge3/include/EGL/`
+5. 50+ episodes minimum for SmolVLA — 25 episodes explicitly fails
+6. Obs keys: `observation.state` (8-dim), `observation.images.image`, `observation.images.image2`, `action` (7-dim)
+7. LIBERO training uses `--policy.load_vlm_weights=true` and `--batch_size=4`
+8. Dataset was v2.1 on HF Hub — converted locally to v3.0 via `lerobot.datasets.v30.convert_dataset_v21_to_v30`
 
 ## CLI Commands
 ```bash
