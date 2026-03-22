@@ -4,7 +4,7 @@
 - **Framework**: LeRobot v0.5.0 (PyTorch, NOT JAX)
 - **Model**: SmolVLA (450M params) — `lerobot/smolvla_base`
 - **Simulation**: LIBERO via MuJoCo
-- **Fine-tuning**: PEFT/LoRA
+- **Fine-tuning**: Expert-only (100M of 450M params trainable, no LoRA)
 - **Dataset**: `HuggingFaceVLA/libero` (1,693 episodes, 273K frames, 40 tasks, v3.0 format)
 
 ## Hardware Constraints

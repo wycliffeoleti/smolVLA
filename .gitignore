@@ -26,6 +26,7 @@ Thumbs.db
 data/
 experiments/
 models/
+outputs/
 *.npy
 *.npz
 wandb/
@@ -48,8 +49,7 @@ checkpoints/
 .env
 *.key
 
-# uv
-uv.lock
+# uv — uv.lock IS committed for reproducibility (pinned deps)
 
 # Local build tools
 .local/
