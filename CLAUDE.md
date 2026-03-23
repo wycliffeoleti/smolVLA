@@ -59,7 +59,7 @@ uv run lerobot-train \
 - **Root cause**: 50 episodes of 1 task insufficient — model learns action patterns but can't complete pick-and-place
 - **Checkpoint**: `experiments/libero_full/checkpoints/050000/pretrained_model`
 
-### Phase 3: Full LIBERO (1,693 episodes, 40 tasks) — BEST
+### Phase 3: Full LIBERO (1,693 episodes, 40 tasks)
 - **Dataset**: `HuggingFaceVLA/libero` (33GB, 273K frames)
 - **100k steps**: Loss 1.04 → 0.10, **20% eval success rate** (best at 60k checkpoint)
 - **Speed**: ~9 steps/s (0.110s/step), 3h 26min total
@@ -69,6 +69,17 @@ uv run lerobot-train \
 - **Wandb**: `smolvla-libero` project
 - **Published baseline**: 96% with batch_size=64 on 8xH100 — our 20% with batch_size=2 on RTX 4060 is expected
 - **Learnable params**: 100M of 450M (train_expert_only=True, no LoRA)
+
+### Phase 4: LoRA fine-tuning (r=64, lr=1e-3) — BEST
+- **Method**: LoRA r=64 on expert q_proj/v_proj + projection layers, lr=1e-3 (10x higher than full training)
+- **100k steps**: Loss 0.226 → 0.10, **32% eval success rate** (best at 100k checkpoint)
+- **Speed**: ~8.5 steps/s (0.117s/step), 3h 38min total
+- **VRAM**: 7.3 GB stable (batch_size=2, bfloat16) — 300MB less than expert-only
+- **Best checkpoint**: `experiments/libero_lora/checkpoints/100000/pretrained_model`
+- **Eval progression**: 6% (20k) → 10% (40k) → 24% (60k) → 24% (80k) → **32% (100k)**
+- **Learnable params**: 3M of 450M (LoRA r=64 via PEFT)
+- **Key insight**: 33x fewer trainable params + 10x higher LR outperformed full expert training (32% vs 20%)
+- **Requires**: `--policy.path=lerobot/smolvla_base --policy.empty_cameras=1 --rename_map` for pretrained base
 
 ## Project Layout
 - `src/smolvla_manuf/` — custom code

@@ -10,27 +10,27 @@ End-to-end fine-tuning of a **450M-parameter Vision-Language-Action model** ([Sm
 
 ## Results
 
-| Setup | GPU | Batch Size | Steps | LIBERO Object Success |
-|-------|-----|-----------|-------|----------------------|
-| **SmolVLA paper** | 4x GPU | 256 | 200k | 87.3% avg |
-| **This project** | RTX 4060 8GB | 2 | 100k | **20%** |
-| Subset (50 eps) | RTX 4060 8GB | 2 | 50k | 0% |
+| Setup | Method | Trainable Params | Steps | LIBERO Object Success |
+|-------|--------|-----------------|-------|----------------------|
+| **SmolVLA paper** | Expert-only, batch 256, 4 GPU | 100M | 200k | 87.3% avg |
+| **This project (LoRA)** | LoRA r=64, batch 2, RTX 4060 | 3M | 100k | **32%** |
+| This project (expert-only) | Expert-only, batch 2, RTX 4060 | 100M | 100k | 20% |
+| Subset (50 eps) | Expert-only, batch 2, RTX 4060 | 100M | 50k | 0% |
 
-Operating at **1/128th the compute budget** (batch_size=2 vs 256, 1 GPU vs 4), the model reaches 20% task success on LIBERO Object. The gap is expected and consistent with batch size scaling in imitation learning.
+Operating at **1/128th the compute budget** (batch_size=2 vs 256, 1 GPU vs 4), LoRA fine-tuning reaches **32% task success** on LIBERO Object — outperforming full expert training (20%) with 33x fewer trainable parameters.
 
 ### Eval Success by Checkpoint
 
-| Steps | 20k | 40k | **60k** | 80k | 100k |
-|-------|-----|-----|---------|-----|------|
-| Success % | 8 | 8 | **20** | 18 | 18 |
+| Steps | 20k | 40k | 60k | 80k | **100k** |
+|-------|-----|-----|-----|-----|----------|
+| LoRA r=64 (3M params) | 6 | 10 | 24 | 24 | **32** |
+| Expert-only (100M params) | 8 | 8 | 20 | 18 | 18 |
 
-### Training Loss
+### Key Findings
 
-Loss: **1.04 → 0.10** (90% reduction) over 100k steps, 3h 26min total training time.
+**1. Data quantity dominates.** Training on 50 episodes (1 task) gave **0% eval success** despite 93% loss reduction. Switching to 1,693 episodes (40 tasks) immediately produced 20% success. In imitation learning, dataset scale matters more than training duration.
 
-### Key Finding: Data Quantity Dominates
-
-Training on 50 episodes (1 task) gave **0% eval success** despite 93% loss reduction. The loss converged but the model couldn't complete pick-and-place tasks. Switching to the full LIBERO dataset (1,693 episodes, 40 tasks) immediately produced 20% success. This demonstrates that in imitation learning, **dataset scale matters more than training duration** for task completion.
+**2. LoRA outperforms full fine-tuning on consumer hardware.** With only 3M trainable params (vs 100M), LoRA r=64 with a 10x higher learning rate (1e-3 vs 1e-4) achieved 32% vs 20%. Fewer parameters + higher LR provides better regularization when effective batch size is small.
 
 ## Architecture
 
@@ -41,9 +41,9 @@ LIBERO Dataset (1,693 episodes, 40 tasks)
 ┌─────────────────────────────────────┐
 │  SmolVLA (450M params)              │
 │  ┌───────────────┐  ┌────────────┐  │
-│  │ SmolVLM2-500M │  │  Action    │  │ ◄── 100M trainable params
-│  │ (frozen)      │──│  Expert    │  │     (expert-only fine-tuning)
-│  │ Vision+Lang   │  │ (trained)  │  │
+│  │ SmolVLM2-500M │  │  Action    │  │ ◄── 3M trainable params
+│  │ (frozen)      │──│  Expert    │  │     (LoRA r=64 on q/v_proj)
+│  │ Vision+Lang   │  │ (LoRA)    │  │
 │  └───────────────┘  └────────────┘  │
 │         ▲                  │        │
 │    2x cameras         7-dim action  │
@@ -97,9 +97,9 @@ set -a && source .env && set +a
 export PATH=.local/bin:~/miniforge3/bin:$PATH
 export LD_LIBRARY_PATH=~/miniforge3/lib:${LD_LIBRARY_PATH:-}
 
-# Evaluate the best checkpoint (60k steps)
+# Evaluate the best checkpoint (LoRA, 100k steps, 32% success)
 uv run lerobot-eval \
-  --policy.path=./experiments/libero_full_dataset/checkpoints/060000/pretrained_model \
+  --policy.path=./experiments/libero_lora/checkpoints/100000/pretrained_model \
   --env.type=libero --env.task=libero_object \
   --eval.batch_size=1 --eval.n_episodes=50
 ```
@@ -110,8 +110,11 @@ uv run lerobot-eval \
 # Stop Ollama if running (frees ~5.3GB VRAM)
 sudo systemctl stop ollama
 
-# Full training (100k steps, ~3.5 hours on RTX 4060)
+# Expert-only training (100k steps, ~3.5 hours on RTX 4060)
 bash scripts/train_libero_full_dataset.sh
+
+# LoRA training (100k steps, ~3.6 hours, best results)
+bash scripts/train_libero_lora.sh
 ```
 
 ## Reproducibility Notes
@@ -134,7 +137,8 @@ smolVLA/
 ├── scripts/
 │   ├── train_libero.sh              # Phase 2: validation (5k steps)
 │   ├── train_libero_full.sh         # Phase 2: full smol-libero (50k steps)
-│   └── train_libero_full_dataset.sh # Phase 3: full LIBERO (100k steps) ← best
+│   ├── train_libero_full_dataset.sh # Phase 3: full LIBERO expert-only (100k steps)
+│   └── train_libero_lora.sh         # Phase 4: LoRA r=64 (100k steps) ← best
 ├── experiments/ → nvmedisk2 (symlink)
 │   ├── libero_full_dataset/         # Phase 3 checkpoints + eval videos
 │   └── libero_full/                 # Phase 2 checkpoints
@@ -149,14 +153,14 @@ smolVLA/
 
 ## Limitations & Next Steps
 
-- **20% vs 87.3%**: Primarily a batch size gap (2 vs 256). The model sees 128x fewer samples per gradient update, which limits generalization across the 10 LIBERO Object tasks.
-- **No LoRA**: Currently uses expert-only fine-tuning (100M params). LoRA could reduce trainable params to ~10M, potentially improving generalization with small effective batch sizes.
+- **32% vs 87.3%**: Primarily a batch size gap (2 vs 256). The model sees 128x fewer samples per gradient update, which limits generalization across the 10 LIBERO Object tasks.
 - **Single eval suite**: Only evaluated on LIBERO Object (10 tasks). The full LIBERO benchmark has 4 suites (Spatial, Object, Goal, Long).
+- **No gradient checkpointing**: SmolVLA in LeRobot v0.5.0 doesn't support `gradient_checkpointing`, preventing batch_size=4.
 
 **Planned improvements:**
-- LoRA fine-tuning to reduce trainable parameters and potentially improve batch efficiency
 - Evaluation across all 4 LIBERO suites
 - Training curve visualizations and per-task success analysis
+- Gradient checkpointing (requires patching `smolvlm_with_expert.py`) to enable batch_size=4
 
 ## References
 
