@@ -282,3 +282,13 @@ def test_run_training_calls_lerobot_train_command() -> None:
     assert called_cmd[:3] == ["uv", "run", "lerobot-train"]
     assert "--dataset.repo_id=HuggingFaceVLA/libero" in called_cmd
     assert "--steps=100" in called_cmd
+
+
+def test_cli_args_respects_image_transforms_false() -> None:
+    cfg = TrainingConfig(dataset_repo_id="x", output_dir="y", steps=100, image_transforms=False)
+    assert "--dataset.image_transforms.enable=false" in cfg.to_cli_args()
+
+
+def test_check_ollama_returns_false_when_systemctl_not_found() -> None:
+    with patch("smolvla_manuf.train.subprocess.run", side_effect=FileNotFoundError):
+        assert check_ollama() is False

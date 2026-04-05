@@ -68,15 +68,6 @@ def _make_mock_run(
     return run
 
 
-@pytest.fixture
-def mock_api_with_two_runs() -> MagicMock:
-    """WandB API returning one expert + one LoRA run (both finished)."""
-    expert = _make_mock_run("expert-id", method=None, final_eval=20.0)
-    lora = _make_mock_run("lora-id", method="LORA", final_eval=32.0)
-    api = MagicMock()
-    api.runs.return_value = [expert, lora]
-    return api
-
 
 @pytest.fixture
 def two_runs() -> list[RunData]:
@@ -292,3 +283,34 @@ def test_plot_data_scaling_creates_png(two_runs: list[RunData], tmp_path: Path) 
     plot_data_scaling(two_runs + [smol], out)
     assert out.exists()
     assert out.stat().st_size > 0
+
+
+# ---------------------------------------------------------------------------
+# Bug fixes — regression tests
+# ---------------------------------------------------------------------------
+
+
+def test_plot_data_scaling_handles_empty_runs(tmp_path: Path) -> None:
+    out = tmp_path / "scaling.png"
+    plot_data_scaling([], out)  # must not raise ValueError: max() arg is an empty sequence
+    assert out.exists()
+
+
+def test_fetch_runs_handles_missing_train_steps_column() -> None:
+    """_parse_run must not KeyError when history lacks 'train/steps'."""
+    run = MagicMock()
+    run.id = "r1"
+    run.state = "finished"
+    run.config = {"peft": None, "steps": 100, "dataset": {"repo_id": "HuggingFaceVLA/libero"}}
+    run.summary = {"eval/pc_success": 10.0, "_step": 100}
+    # History DataFrame missing the 'train/steps' column entirely
+    df = pd.DataFrame({"train/loss": [0.5, 0.4], "eval/pc_success": [None, 10.0]})
+    run.history.return_value = df
+    api = MagicMock()
+    api.runs.return_value = [run]
+
+    with patch("smolvla_manuf.analysis.wandb.Api", return_value=api):
+        result = fetch_runs("smolvla-libero")
+
+    assert result[0].eval_checkpoints == []
+    assert result[0].loss_history == []

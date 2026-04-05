@@ -1,5 +1,7 @@
 # SmolVLA: Vision-Language-Action Fine-Tuning on Consumer Hardware
 
+![CI](https://github.com/WycliffOtieno/smolVLA/actions/workflows/ci.yml/badge.svg)
+
 End-to-end fine-tuning of a **450M-parameter Vision-Language-Action model** ([SmolVLA](https://huggingface.co/lerobot/smolvla_base)) for robotic pick-and-place on a single **RTX 4060 (8GB VRAM)** using [LeRobot](https://github.com/huggingface/lerobot).
 
 <p align="center">

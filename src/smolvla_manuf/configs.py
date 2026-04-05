@@ -89,7 +89,7 @@ class TrainingConfig:
         # Dataset + env (always present)
         args += [
             f"--dataset.repo_id={self.dataset_repo_id}",
-            "--dataset.image_transforms.enable=true",
+            f"--dataset.image_transforms.enable={'true' if self.image_transforms else 'false'}",
             "--env.type=libero",
             "--env.task=libero_object",
             f"--output_dir={self.output_dir}",

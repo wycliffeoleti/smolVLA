@@ -24,10 +24,14 @@ def check_ollama() -> bool:
     Returns:
         True if Ollama is running (consuming ~5.3GB VRAM), False otherwise.
     """
-    result = subprocess.run(
-        ["systemctl", "is-active", "--quiet", "ollama"],
-        capture_output=True,
-    )
+    try:
+        result = subprocess.run(
+            ["systemctl", "is-active", "--quiet", "ollama"],
+            capture_output=True,
+        )
+    except FileNotFoundError:
+        log.debug("systemctl not found; skipping Ollama VRAM check")
+        return False
     return result.returncode == 0
 
 

@@ -75,9 +75,10 @@ def _parse_run(run: Any) -> RunData:  # wandb.Run is untyped; Any avoids spuriou
 
     history: pd.DataFrame = run.history(samples=10_000)
 
+    _has_steps = "train/steps" in history.columns
     eval_rows = (
         history[history["eval/pc_success"].notna()]
-        if "eval/pc_success" in history.columns
+        if "eval/pc_success" in history.columns and _has_steps
         else pd.DataFrame()
     )
     eval_checkpoints = [
@@ -87,7 +88,7 @@ def _parse_run(run: Any) -> RunData:  # wandb.Run is untyped; Any avoids spuriou
 
     loss_rows = (
         history[history["train/loss"].notna()]
-        if "train/loss" in history.columns
+        if "train/loss" in history.columns and _has_steps
         else pd.DataFrame()
     )
     loss_history = [
@@ -269,6 +270,9 @@ def plot_data_scaling(runs: list[RunData], output_path: Path) -> None:
 
     ax.set_ylabel("Final eval success rate (%)", fontsize=12)
     ax.set_title("Data Scaling: Dataset Size × Fine-tuning Method", fontsize=13, pad=12)
+    if not values:
+        _save_fig(fig, output_path)
+        return
     ax.set_ylim(0, max(values) * 1.25 + 5)
     ax.grid(True, axis="y", alpha=0.4)
     _save_fig(fig, output_path)
