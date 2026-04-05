@@ -128,12 +128,14 @@ uv run lerobot-eval \
 # Stop Ollama if running (frees ~5.3GB VRAM)
 sudo systemctl stop ollama
 
-# Expert-only training (100k steps, ~3.5 hours on RTX 4060)
-bash scripts/train_libero_full_dataset.sh
+# LoRA training — best result (100k steps, ~3.6 hours, 32% success)
+uv run smolvla-train --config lora_r64
 
-# LoRA training (100k steps, ~3.6 hours, best results)
-bash scripts/train_libero_lora.sh
+# Expert-only training (100k steps, ~3.5 hours, 20% success)
+uv run smolvla-train --config expert_full
 ```
+
+The launcher checks for Ollama automatically and errors before wasting training time. Available presets: `validation`, `smol_libero`, `expert_full`, `lora_r64`.
 
 ## Reproducibility Notes
 
@@ -161,9 +163,12 @@ smolVLA/
 │   ├── libero_full_dataset/         # Phase 3 checkpoints + eval videos
 │   └── libero_full/                 # Phase 2 checkpoints
 ├── src/smolvla_manuf/
-│   └── analysis.py                  # WandB metric extraction + plot generation
+│   ├── analysis.py                  # WandB metric extraction + plot generation
+│   ├── configs.py                   # Typed TrainingConfig dataclass + 4 presets
+│   └── train.py                     # Training launcher with Ollama pre-flight check
 ├── tests/
-│   └── test_analysis.py             # Pytest tests (15 tests, 92% coverage)
+│   ├── test_analysis.py             # 15 tests — WandB parsing, plots, export
+│   └── test_configs.py              # 29 tests — config args, presets, launcher
 ├── assets/
 │   ├── demo_success.gif             # Successful rollout (LoRA, 60k checkpoint)
 │   ├── demo_failure_phase2.gif      # Phase 2 failure (0% with 50 episodes)

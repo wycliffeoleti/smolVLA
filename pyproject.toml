@@ -9,6 +9,7 @@ dependencies = [
 
 [project.scripts]
 smolvla-analyze = "smolvla_manuf.analysis:main"
+smolvla-train = "smolvla_manuf.train:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.8", "mypy>=1.13", "pre-commit>=4.0"]
