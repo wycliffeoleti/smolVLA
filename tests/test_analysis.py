@@ -68,7 +68,6 @@ def _make_mock_run(
     return run
 
 
-
 @pytest.fixture
 def two_runs() -> list[RunData]:
     """Pre-built RunData list for plot tests (no WandB API needed)."""
