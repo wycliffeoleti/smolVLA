@@ -3,9 +3,11 @@
 End-to-end fine-tuning of a **450M-parameter Vision-Language-Action model** ([SmolVLA](https://huggingface.co/lerobot/smolvla_base)) for robotic pick-and-place on a single **RTX 4060 (8GB VRAM)** using [LeRobot](https://github.com/huggingface/lerobot).
 
 <p align="center">
-  <img src="assets/demo_success.gif" alt="Successful pick-and-place rollout" width="320"/>
+  <img src="assets/demo_failure_phase2.gif" alt="Phase 2: 0% success (50 episodes)" width="300"/>
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/demo_success.gif" alt="Phase 4: 32% success (LoRA, full LIBERO)" width="300"/>
   <br/>
-  <em>Successful pick-and-place on LIBERO Object (60k checkpoint)</em>
+  <em>Left: 50-episode training → 0% success &nbsp;|&nbsp; Right: LoRA on full LIBERO (1,693 eps) → 32% success</em>
 </p>
 
 ## Results
@@ -19,12 +21,28 @@ End-to-end fine-tuning of a **450M-parameter Vision-Language-Action model** ([Sm
 
 Operating at **1/128th the compute budget** (batch_size=2 vs 256, 1 GPU vs 4), LoRA fine-tuning reaches **32% task success** on LIBERO Object — outperforming full expert training (20%) with 33x fewer trainable parameters.
 
+### Training Curves
+
+<p align="center">
+  <img src="assets/loss_curves.png" alt="Training loss: LoRA vs Expert-only" width="480"/>
+</p>
+
 ### Eval Success by Checkpoint
+
+<p align="center">
+  <img src="assets/eval_progression.png" alt="Eval success rate by checkpoint" width="440"/>
+</p>
 
 | Steps | 20k | 40k | 60k | 80k | **100k** |
 |-------|-----|-----|-----|-----|----------|
 | LoRA r=64 (3M params) | 6 | 10 | 24 | 24 | **32** |
 | Expert-only (100M params) | 8 | 8 | 20 | 18 | 18 |
+
+### Data Scaling
+
+<p align="center">
+  <img src="assets/data_scaling.png" alt="Final eval success by dataset size and method" width="440"/>
+</p>
 
 ### Key Findings
 
@@ -142,10 +160,18 @@ smolVLA/
 ├── experiments/ → nvmedisk2 (symlink)
 │   ├── libero_full_dataset/         # Phase 3 checkpoints + eval videos
 │   └── libero_full/                 # Phase 2 checkpoints
+├── src/smolvla_manuf/
+│   └── analysis.py                  # WandB metric extraction + plot generation
+├── tests/
+│   └── test_analysis.py             # Pytest tests (15 tests, 92% coverage)
 ├── assets/
-│   ├── demo_success.gif             # Successful rollout
-│   └── demo_failure_phase2.gif      # Phase 2 failure (0% with 50 episodes)
-├── src/smolvla_manuf/               # Custom code (placeholder)
+│   ├── demo_success.gif             # Successful rollout (LoRA, 60k checkpoint)
+│   ├── demo_failure_phase2.gif      # Phase 2 failure (0% with 50 episodes)
+│   ├── loss_curves.png              # Training loss: LoRA vs Expert-only
+│   ├── eval_progression.png         # Eval success rate by checkpoint
+│   └── data_scaling.png             # Final eval by dataset size
+├── results/
+│   └── metrics.json                 # Structured training results (generated)
 ├── pyproject.toml
 ├── CLAUDE.md                        # Development notes + gotchas
 └── README.md
@@ -159,7 +185,7 @@ smolVLA/
 
 **Planned improvements:**
 - Evaluation across all 4 LIBERO suites
-- Training curve visualizations and per-task success analysis
+- Per-task success breakdown
 - Gradient checkpointing (requires patching `smolvlm_with_expert.py`) to enable batch_size=4
 
 ## References

@@ -1,0 +1,108 @@
+{
+  "runs": [
+    {
+      "id": "sdvi0ol2",
+      "method": "expert",
+      "dataset": "HuggingFaceVLA/smol-libero",
+      "steps": 5000,
+      "final_eval": 0.0,
+      "eval_checkpoints": [
+        {
+          "step": 2500,
+          "success_rate": 0.0
+        },
+        {
+          "step": 5000,
+          "success_rate": 0.0
+        }
+      ]
+    },
+    {
+      "id": "7x8vrcrl",
+      "method": "expert",
+      "dataset": "HuggingFaceVLA/smol-libero",
+      "steps": 50000,
+      "final_eval": 0.0,
+      "eval_checkpoints": [
+        {
+          "step": 10000,
+          "success_rate": 0.0
+        },
+        {
+          "step": 20000,
+          "success_rate": 0.0
+        },
+        {
+          "step": 30000,
+          "success_rate": 0.0
+        },
+        {
+          "step": 40000,
+          "success_rate": 0.0
+        },
+        {
+          "step": 50000,
+          "success_rate": 0.0
+        }
+      ]
+    },
+    {
+      "id": "augzgt4o",
+      "method": "expert",
+      "dataset": "HuggingFaceVLA/libero",
+      "steps": 100000,
+      "final_eval": 18.0,
+      "eval_checkpoints": [
+        {
+          "step": 20000,
+          "success_rate": 8.0
+        },
+        {
+          "step": 40000,
+          "success_rate": 8.0
+        },
+        {
+          "step": 60000,
+          "success_rate": 20.0
+        },
+        {
+          "step": 80000,
+          "success_rate": 18.0
+        },
+        {
+          "step": 100000,
+          "success_rate": 18.0
+        }
+      ]
+    },
+    {
+      "id": "0j4ogzbw",
+      "method": "lora",
+      "dataset": "HuggingFaceVLA/libero",
+      "steps": 100000,
+      "final_eval": 32.0,
+      "eval_checkpoints": [
+        {
+          "step": 20000,
+          "success_rate": 6.0
+        },
+        {
+          "step": 40000,
+          "success_rate": 10.0
+        },
+        {
+          "step": 60000,
+          "success_rate": 24.0
+        },
+        {
+          "step": 80000,
+          "success_rate": 24.0
+        },
+        {
+          "step": 100000,
+          "success_rate": 32.0
+        }
+      ]
+    }
+  ]
+}
